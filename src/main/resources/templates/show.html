@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-F3w7mX95PdgyTmZZMECAngseQB83DfGTowi0iMjiWaeVhAn4FJkqJByhZMI3AhiU" crossorigin="anonymous">
+    <script src="https://kit.fontawesome.com/9d1d9a82d2.js" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.0.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-modal/0.9.1/jquery.modal.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.js"></script>
+    <title>Exchange Rate</title>
+</head>
+<style>
+    .chart-container {
+        width: 50%;
+        height: 50%;
+        margin: auto;
+    }
+</style>
+<body>
+<div class="card chart-container">
+    <div>
+        <H3 style="text-align:center">Exchange rate</H3>
+    </div>
+    <select id="select" class="form-select" aria-label="Default select example">
+        <option>請選擇</option>
+        <option th:each="item:${list}" th:text="${item}"></option>
+    </select>
+    <div id="content">
+        <canvas id="chart"></canvas>
+    </div>
+</div>
+
+</body>
+<script>
+    $('#select').on('change', function (e) {
+        let country = $('#select').val();
+        $.ajax({
+            type: "POST",
+            url: "/api/exchange-rates",
+            data: {
+                country: country
+            },
+            success: function (result) {
+                let jsonData = JSON.parse(result);
+                let buyData = [];
+                let sellData = [];
+                jsonData.forEach(entry => {
+                    buyData.push(parseFloat(entry.spotBuyRate));
+                    sellData.push(parseFloat(entry.spotSellRate));
+                });
+                const ctx = document.getElementById("chart").getContext('2d');
+                new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: ["Jan",
+                            "Feb",
+                            "Mar",
+                            "Apr",
+                            "May",
+                            "Jun",
+                            "Jul",
+                            "Aug",
+                            "Sep",
+                            "Oct",
+                            "Nov",
+                            "Dec"],
+                        datasets: [
+                            {
+                                label: "buy",
+                                backgroundColor: 'rgba(161, 198, 247, 1)',
+                                borderColor: 'rgb(47, 128, 237)',
+                                data: buyData,
+                                fill: false
+                            },
+                            {
+                                label: "sell",
+                                backgroundColor: 'rgb(255, 99, 132)',
+                                borderColor: 'rgb(255, 99, 132)',
+                                data: sellData,
+                                fill: false
+                            }
+                        ]
+                    },
+                    options: {
+                        scales: {
+                            yAxes: [{
+                                ticks: {
+                                    stepSize: 0.5,
+                                }
+                            }]
+                        }
+                    },
+                });
+            }
+        });
+    })
+</script>
+
+</html>
